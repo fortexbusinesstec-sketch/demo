@@ -1,6 +1,6 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useState } from "react";
 import {
   IconBuildingFactory,
   IconBuilding,
@@ -9,9 +9,15 @@ import {
   IconHome,
   IconBuildingStore,
   IconClipboardCheck,
+  IconMapPin,
+  IconPhone,
+  IconMail,
+  IconUser,
+  IconMap,
 } from "@tabler/icons-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import type { ClienteRow } from "../actions";
 import { cn } from "@/lib/utils";
 
@@ -49,31 +55,118 @@ export const ClienteCard = memo(function ClienteCard({
   cliente: ClienteRow;
   onRegistrarVisita: () => void;
 }) {
+  const [dialogOpen, setDialogOpen] = useState(false);
   const Icon = iconMap[cliente.tipo_cliente] || IconBuildingStore;
   const badgeColor = estadoColor[cliente.estado] || "";
   const cardBg = estadoBg[cliente.estado] || "";
 
+  const mapsUrl = cliente.lat && cliente.lng
+    ? `https://www.google.com/maps/dir/?api=1&destination=${cliente.lat},${cliente.lng}`
+    : cliente.direccion
+      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([cliente.direccion, cliente.distrito, cliente.ciudad].filter(Boolean).join(", "))}`
+      : null;
+
   return (
-    <Card className={cn("flex flex-row items-center gap-3 py-4 px-2.5", cardBg)}>
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sky-100 text-sky-600">
-        <Icon size={22} />
-      </div>
+    <>
+      <Card
+        className={cn("flex flex-row items-center gap-3 py-4 px-2.5 cursor-pointer transition-colors hover:bg-zinc-50", cardBg)}
+        onClick={() => setDialogOpen(true)}
+      >
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sky-100 text-sky-600">
+          <Icon size={22} />
+        </div>
 
-      <h3 className="flex-1 text-base font-semibold text-zinc-900 leading-tight">
-        {cliente.nombre_entidad}
-      </h3>
+        <h3 className="flex-1 text-base font-semibold text-zinc-900 leading-tight">
+          {cliente.nombre_entidad}
+        </h3>
 
-      <div className="flex shrink-0 flex-col items-end gap-1.5">
-        <Badge variant="outline" className={badgeColor}>{cliente.estado}</Badge>
-        <button
-          type="button"
-          onClick={onRegistrarVisita}
-          className="flex h-9 items-center gap-1 rounded-full bg-sky-500 px-3.5 text-xs font-semibold text-white transition-colors hover:bg-sky-600 active:bg-sky-700"
-        >
-          <IconClipboardCheck size={15} />
-          Registrar
-        </button>
-      </div>
-    </Card>
+        <div className="flex shrink-0 flex-col items-end gap-1.5">
+          <Badge variant="outline" className={badgeColor}>{cliente.estado}</Badge>
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onRegistrarVisita(); }}
+            className="flex h-9 items-center gap-1 rounded-full bg-sky-500 px-3.5 text-xs font-semibold text-white transition-colors hover:bg-sky-600 active:bg-sky-700"
+          >
+            <IconClipboardCheck size={15} />
+            Registrar
+          </button>
+        </div>
+      </Card>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogTitle className="flex items-center gap-2 text-lg font-bold text-zinc-900">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-100 text-sky-600">
+              <Icon size={18} />
+            </div>
+            {cliente.nombre_entidad}
+          </DialogTitle>
+
+          <div className="space-y-3">
+            {cliente.direccion && (
+              <div className="flex items-start gap-2">
+                <IconMapPin size={18} className="mt-0.5 shrink-0 text-zinc-400" />
+                <div>
+                  <p className="text-xs font-medium text-zinc-500">Dirección</p>
+                  <p className="text-sm text-zinc-900">{cliente.direccion}</p>
+                  {cliente.distrito && (
+                    <p className="text-xs text-zinc-500">{cliente.distrito}</p>
+                  )}
+                </div>
+              </div>
+            )}
+            {cliente.telefono && (
+              <div className="flex items-start gap-2">
+                <IconPhone size={18} className="mt-0.5 shrink-0 text-zinc-400" />
+                <div>
+                  <p className="text-xs font-medium text-zinc-500">Teléfono</p>
+                  <a href={`tel:${cliente.telefono}`} className="text-sm text-sky-600 hover:underline">
+                    {cliente.telefono}
+                  </a>
+                </div>
+              </div>
+            )}
+            {cliente.email && (
+              <div className="flex items-start gap-2">
+                <IconMail size={18} className="mt-0.5 shrink-0 text-zinc-400" />
+                <div>
+                  <p className="text-xs font-medium text-zinc-500">Email</p>
+                  <a href={`mailto:${cliente.email}`} className="text-sm text-sky-600 hover:underline">
+                    {cliente.email}
+                  </a>
+                </div>
+              </div>
+            )}
+            {cliente.contacto_clave && (
+              <div className="flex items-start gap-2">
+                <IconUser size={18} className="mt-0.5 shrink-0 text-zinc-400" />
+                <div>
+                  <p className="text-xs font-medium text-zinc-500">Contacto clave</p>
+                  <p className="text-sm text-zinc-900">
+                    {cliente.contacto_clave}
+                    {cliente.cargo_contacto && ` — ${cliente.cargo_contacto}`}
+                  </p>
+                </div>
+              </div>
+            )}
+            {cliente.referencia && (
+              <p className="text-xs italic text-zinc-400">Ref: {cliente.referencia}</p>
+            )}
+          </div>
+
+          {mapsUrl && (
+            <a
+              href={mapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl bg-sky-500 py-3 text-sm font-semibold text-white transition-colors hover:bg-sky-600"
+            >
+              <IconMap size={18} />
+              Abrir en Google Maps
+            </a>
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
   );
 });

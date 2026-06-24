@@ -11,11 +11,11 @@ import {
   IconHome,
   IconBuildingStore,
   IconPlus,
+  IconMapPin,
 } from "@tabler/icons-react";
 import { CiudadCard } from "./components/CiudadCard";
 import { ClienteCard } from "./components/ClienteCard";
 import type { ClienteRow, ConteoCiudad } from "./actions";
-import { cn } from "@/lib/utils";
 
 const VisitaSheet = lazy(() =>
   import("./components/VisitaSheet").then((m) => ({ default: m.VisitaSheet }))
@@ -24,40 +24,38 @@ const CrearClienteSheet = lazy(() =>
   import("./components/CrearClienteSheet").then((m) => ({ default: m.CrearClienteSheet }))
 );
 
-import { getAllConteos, getClientesByCiudadAndTipo } from "./actions";
+import { getAllConteos, getClientesByCiudadGrouped } from "./actions";
 
 type Screen = "dashboard" | "ciudad";
 
-const tipoClienteList = [
-  { key: "EPS", icon: IconBuildingFactory },
-  { key: "Gerencia Regional", icon: IconBuilding },
-  { key: "Constructora", icon: IconHammer },
-  { key: "Ferretería", icon: IconTools },
-  { key: "Inmobiliaria", icon: IconHome },
-  { key: "Otro", icon: IconBuildingStore },
-];
+const tipoClienteIcons: Record<string, typeof IconBuildingFactory> = {
+  EPS: IconBuildingFactory,
+  "Gerencia Regional": IconBuilding,
+  Constructora: IconHammer,
+  Ferretería: IconTools,
+  Inmobiliaria: IconHome,
+  Otro: IconBuildingStore,
+};
 
 export default function VentaPage() {
   const [screen, setScreen] = useState<Screen>("dashboard");
   const [ciudadSeleccionada, setCiudadSeleccionada] = useState<string>("");
   const [conteos, setConteos] = useState<ConteoCiudad[]>([]);
   const [clientes, setClientes] = useState<ClienteRow[]>([]);
-  const [filtroTipo, setFiltroTipo] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [clienteSheet, setClienteSheet] = useState<ClienteRow | null>(null);
   const [loadingClientes, setLoadingClientes] = useState(false);
   const [crearSheetOpen, setCrearSheetOpen] = useState(false);
   const [clienteEditar, setClienteEditar] = useState<ClienteRow | null>(null);
-  const [filtrosOpen, setFiltrosOpen] = useState(false);
 
   useEffect(() => {
     getAllConteos().then(setConteos);
   }, []);
 
   const loadClientes = useCallback(
-    async (ciudad: string, tipo: string | null) => {
+    async (ciudad: string) => {
       setLoadingClientes(true);
-      const data = await getClientesByCiudadAndTipo(ciudad, tipo);
+      const data = await getClientesByCiudadGrouped(ciudad);
       setClientes(data);
       setLoadingClientes(false);
     },
@@ -70,26 +68,16 @@ export default function VentaPage() {
 
   const handleSelectCiudad = useCallback((ciudad: string) => {
     setCiudadSeleccionada(ciudad);
-    setFiltroTipo(null);
     setScreen("ciudad");
-    getClientesByCiudadAndTipo(ciudad, null).then((data) => {
+    getClientesByCiudadGrouped(ciudad).then((data) => {
       setClientes(data);
     });
   }, []);
-
-  const handleFiltroTipo = useCallback(
-    (tipo: string | null) => {
-      setFiltroTipo(tipo);
-      loadClientes(ciudadSeleccionada, tipo);
-    },
-    [ciudadSeleccionada, loadClientes]
-  );
 
   const handleBack = useCallback(() => {
     setScreen("dashboard");
     setCiudadSeleccionada("");
     setClientes([]);
-    setFiltroTipo(null);
   }, []);
 
   const handleRegistrarVisita = useCallback((cliente: ClienteRow) => {
@@ -98,9 +86,9 @@ export default function VentaPage() {
   }, []);
 
   const handleVisitaSuccess = useCallback(() => {
-    loadClientes(ciudadSeleccionada, filtroTipo);
+    loadClientes(ciudadSeleccionada);
     refreshConteos();
-  }, [ciudadSeleccionada, filtroTipo, loadClientes, refreshConteos]);
+  }, [ciudadSeleccionada, loadClientes, refreshConteos]);
 
   const handleEditarCliente = useCallback((cliente: ClienteRow) => {
     setClienteEditar(cliente);
@@ -110,9 +98,9 @@ export default function VentaPage() {
   const handleCrearClienteSuccess = useCallback(() => {
     refreshConteos();
     if (screen === "ciudad") {
-      loadClientes(ciudadSeleccionada, filtroTipo);
+      loadClientes(ciudadSeleccionada);
     }
-  }, [screen, ciudadSeleccionada, filtroTipo, loadClientes, refreshConteos]);
+  }, [screen, ciudadSeleccionada, loadClientes, refreshConteos]);
 
   const getConteo = useCallback(
     (ciudad: string) => {
@@ -141,6 +129,25 @@ export default function VentaPage() {
     setCrearSheetOpen(true);
   }, []);
 
+  const distritosAgrupados = useMemo(() => {
+    const map = new Map<string, Map<string, ClienteRow[]>>();
+    for (const c of clientes) {
+      const d = c.distrito || "Sin distrito";
+      if (!map.has(d)) map.set(d, new Map());
+      const tm = map.get(d)!;
+      if (!tm.has(c.tipo_cliente)) tm.set(c.tipo_cliente, []);
+      tm.get(c.tipo_cliente)!.push(c);
+    }
+    return Array.from(map.entries())
+      .sort(([a], [b]) => (a === "Sin distrito" ? 1 : b === "Sin distrito" ? -1 : a.localeCompare(b)))
+      .map(([distrito, tm]) => ({
+        distrito,
+        tipos: Array.from(tm.entries())
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([tipo, clientes]) => ({ tipo, clientes })),
+      }));
+  }, [clientes]);
+
   if (screen === "ciudad") {
     return (
       <div className="mx-auto flex min-h-dvh w-full max-w-7xl flex-col bg-white px-4 py-3 md:px-8">
@@ -162,118 +169,52 @@ export default function VentaPage() {
           </button>
         </div>
 
-        <div className="mb-4 relative">
-          <div className="flex gap-2 overflow-x-auto pb-1 md:flex-wrap md:overflow-visible">
-            <button
-              type="button"
-              onClick={() => handleFiltroTipo(null)}
-              className={cn(
-                "shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors whitespace-nowrap",
-                filtroTipo === null
-                  ? "border-sky-500 bg-sky-500 text-white"
-                  : "border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50"
-              )}
-            >
-              Todos
-            </button>
-            {tipoClienteList.slice(0, 3).map((t) => {
-              const Icon = t.icon;
-              const active = filtroTipo === t.key;
-              return (
-                <button
-                  key={t.key}
-                  type="button"
-                  onClick={() => handleFiltroTipo(t.key)}
-                  className={cn(
-                    "shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors whitespace-nowrap",
-                    active
-                      ? "border-sky-500 bg-sky-500 text-white"
-                      : "border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50"
-                  )}
-                >
-                  <Icon size={16} className="inline mr-1 align-text-bottom" />
-                  {t.key}
-                </button>
-              );
-            })}
-            <div className="relative shrink-0 md:hidden">
-              <button
-                type="button"
-                onClick={() => setFiltrosOpen(!filtrosOpen)}
-                className="shrink-0 rounded-full border border-dashed border-zinc-400 px-3 py-1.5 text-sm font-medium text-zinc-500 hover:bg-zinc-50 transition-colors whitespace-nowrap"
-              >
-                +{tipoClienteList.length - 3} más
-              </button>
-              {filtrosOpen && (
-                <>
-                  <div className="fixed inset-0 z-10" onClick={() => setFiltrosOpen(false)} />
-                  <div className="absolute right-0 top-full z-20 mt-1 w-48 rounded-xl border border-zinc-200 bg-white p-1 shadow-lg">
-                    {tipoClienteList.slice(3).map((t) => {
-                      const Icon = t.icon;
-                      const active = filtroTipo === t.key;
-                      return (
-                        <button
-                          key={t.key}
-                          type="button"
-                          onClick={() => { handleFiltroTipo(t.key); setFiltrosOpen(false); }}
-                          className={cn(
-                            "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                            active
-                              ? "bg-sky-50 text-sky-700"
-                              : "text-zinc-700 hover:bg-zinc-50"
-                          )}
-                        >
-                          <Icon size={16} />
-                          {t.key}
-                        </button>
-                      );
-                    })}
+        {loadingClientes ? (
+          <p className="py-8 text-center text-sm text-zinc-400">Cargando...</p>
+        ) : clientes.length === 0 ? (
+          <p className="py-8 text-center text-sm text-zinc-400">No hay clientes en esta ciudad</p>
+        ) : (
+          <div className="flex flex-col gap-6">
+            {distritosAgrupados.map((dg) => (
+              <div key={dg.distrito}>
+                <div className="mb-3 flex items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-100 text-rose-600">
+                    <IconMapPin size={18} />
                   </div>
-                </>
-              )}
-            </div>
-            <div className="hidden md:flex md:gap-2">
-              {tipoClienteList.slice(3).map((t) => {
-                const Icon = t.icon;
-                const active = filtroTipo === t.key;
-                return (
-                  <button
-                    key={t.key}
-                    type="button"
-                    onClick={() => handleFiltroTipo(t.key)}
-                    className={cn(
-                      "shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors whitespace-nowrap",
-                      active
-                        ? "border-sky-500 bg-sky-500 text-white"
-                        : "border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50"
-                    )}
-                  >
-                    <Icon size={16} className="inline mr-1 align-text-bottom" />
-                    {t.key}
-                  </button>
-                );
-              })}
-            </div>
+                  <h2 className="text-lg font-bold text-zinc-900">{dg.distrito}</h2>
+                  <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-500">
+                    {dg.tipos.reduce((s, t) => s + t.clientes.length, 0)}
+                  </span>
+                </div>
+                <div className="flex flex-col gap-4">
+                  {dg.tipos.map((tg) => {
+                    const TipoIcon = tipoClienteIcons[tg.tipo] || IconBuildingStore;
+                    return (
+                      <div key={tg.tipo}>
+                        <div className="mb-2 flex items-center gap-1.5 px-1">
+                          <TipoIcon size={15} className="text-zinc-400" />
+                          <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-400">
+                            {tg.tipo}
+                          </h3>
+                          <span className="text-xs text-zinc-300">({tg.clientes.length})</span>
+                        </div>
+                        <div className="flex flex-col gap-2 md:grid md:grid-cols-2 lg:grid-cols-3">
+                          {tg.clientes.map((cliente) => (
+                            <ClienteCard
+                              key={cliente.id}
+                              cliente={cliente}
+                              onRegistrarVisita={() => handleRegistrarVisita(cliente)}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </div>
-        </div>
-
-        <div className="flex flex-col gap-3 md:grid md:grid-cols-2 lg:grid-cols-3">
-          {loadingClientes ? (
-            <p className="col-span-full py-8 text-center text-sm text-zinc-400">Cargando...</p>
-          ) : clientes.length === 0 ? (
-            <p className="col-span-full py-8 text-center text-sm text-zinc-400">
-              No hay clientes en esta ciudad
-            </p>
-          ) : (
-            clientes.map((cliente) => (
-              <ClienteCard
-                key={cliente.id}
-                cliente={cliente}
-                onRegistrarVisita={() => handleRegistrarVisita(cliente)}
-              />
-            ))
-          )}
-        </div>
+        )}
 
         <Suspense fallback={null}>
           <VisitaSheet

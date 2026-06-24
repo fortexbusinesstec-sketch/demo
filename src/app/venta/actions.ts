@@ -43,6 +43,14 @@ export const getClientesByCiudad = cache(async (ciudad: string) => {
   return serialize<ClienteRow[]>(result.rows);
 });
 
+export const getClientesByCiudadGrouped = cache(async (ciudad: string) => {
+  const result = await db.execute({
+    sql: "SELECT * FROM clientes_potenciales WHERE ciudad = ? ORDER BY distrito ASC, tipo_cliente ASC, nombre_entidad ASC",
+    args: [ciudad],
+  });
+  return serialize<ClienteRow[]>(result.rows);
+});
+
 export async function getConteoPorVisitar(ciudad: string) {
   const result = await db.execute({
     sql: "SELECT COUNT(*) as count FROM clientes_potenciales WHERE ciudad = ? AND estado = 'Por visitar'",
