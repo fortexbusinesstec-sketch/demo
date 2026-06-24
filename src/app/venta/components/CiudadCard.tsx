@@ -6,6 +6,7 @@ import {
   IconBuildingSkyscraper,
   IconAnchor,
   IconChevronRight,
+  IconMapPin,
 } from "@tabler/icons-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -24,6 +25,12 @@ const config: Record<
     bg: "bg-slate-50",
     border: "border-slate-200",
     badgeClass: "bg-slate-100 text-slate-800 border-slate-200",
+  },
+  Lambayeque: {
+    icon: IconMapPin,
+    bg: "bg-amber-50",
+    border: "border-amber-200",
+    badgeClass: "bg-amber-100 text-amber-800 border-amber-200",
   },
   Trujillo: {
     icon: IconBuildingSkyscraper,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, lazy, Suspense } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   IconDroplet,
   IconArrowLeft,
@@ -15,16 +15,11 @@ import {
 } from "@tabler/icons-react";
 import { CiudadCard } from "./components/CiudadCard";
 import { ClienteCard } from "./components/ClienteCard";
+import { VisitaSheet } from "./components/VisitaSheet";
+import { CrearClienteSheet } from "./components/CrearClienteSheet";
 import type { ClienteRow, ConteoCiudad } from "./actions";
 
-const VisitaSheet = lazy(() =>
-  import("./components/VisitaSheet").then((m) => ({ default: m.VisitaSheet }))
-);
-const CrearClienteSheet = lazy(() =>
-  import("./components/CrearClienteSheet").then((m) => ({ default: m.CrearClienteSheet }))
-);
-
-import { getAllConteos, getClientesByCiudadGrouped } from "./actions";
+import { getAllConteos, getClientesByCiudadGrouped, getCiudades } from "./actions";
 
 type Screen = "dashboard" | "ciudad";
 
@@ -40,6 +35,7 @@ const tipoClienteIcons: Record<string, typeof IconBuildingFactory> = {
 export default function VentaPage() {
   const [screen, setScreen] = useState<Screen>("dashboard");
   const [ciudadSeleccionada, setCiudadSeleccionada] = useState<string>("");
+  const [ciudades, setCiudades] = useState<string[]>([]);
   const [conteos, setConteos] = useState<ConteoCiudad[]>([]);
   const [clientes, setClientes] = useState<ClienteRow[]>([]);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -49,6 +45,7 @@ export default function VentaPage() {
   const [clienteEditar, setClienteEditar] = useState<ClienteRow | null>(null);
 
   useEffect(() => {
+    getCiudades().then(setCiudades);
     getAllConteos().then(setConteos);
   }, []);
 
@@ -169,72 +166,76 @@ export default function VentaPage() {
           </button>
         </div>
 
-        {loadingClientes ? (
+        {loadingClientes && clientes.length === 0 ? (
           <p className="py-8 text-center text-sm text-zinc-400">Cargando...</p>
         ) : clientes.length === 0 ? (
           <p className="py-8 text-center text-sm text-zinc-400">No hay clientes en esta ciudad</p>
         ) : (
-          <div className="flex flex-col gap-6">
-            {distritosAgrupados.map((dg) => (
-              <div key={dg.distrito}>
-                <div className="mb-3 flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-100 text-rose-600">
-                    <IconMapPin size={18} />
-                  </div>
-                  <h2 className="text-lg font-bold text-zinc-900">{dg.distrito}</h2>
-                  <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-500">
-                    {dg.tipos.reduce((s, t) => s + t.clientes.length, 0)}
-                  </span>
-                </div>
-                <div className="flex flex-col gap-4">
-                  {dg.tipos.map((tg) => {
-                    const TipoIcon = tipoClienteIcons[tg.tipo] || IconBuildingStore;
-                    return (
-                      <div key={tg.tipo}>
-                        <div className="mb-2 flex items-center gap-1.5 px-1">
-                          <TipoIcon size={15} className="text-zinc-400" />
-                          <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-400">
-                            {tg.tipo}
-                          </h3>
-                          <span className="text-xs text-zinc-300">({tg.clientes.length})</span>
-                        </div>
-                        <div className="flex flex-col gap-2 md:grid md:grid-cols-2 lg:grid-cols-3">
-                          {tg.clientes.map((cliente) => (
-                            <ClienteCard
-                              key={cliente.id}
-                              cliente={cliente}
-                              onRegistrarVisita={() => handleRegistrarVisita(cliente)}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+          <>
+            {loadingClientes && (
+              <div className="sticky top-0 z-10 -mx-4 mb-2 flex items-center justify-center gap-2 bg-white/80 px-4 py-2 text-xs text-zinc-400 backdrop-blur-sm md:-mx-8">
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-sky-500" />
+                Actualizando...
               </div>
-            ))}
-          </div>
+            )}
+            <div className="flex flex-col gap-6">
+              {distritosAgrupados.map((dg) => (
+                <div key={dg.distrito} style={{ contentVisibility: 'auto', containIntrinsicSize: 'auto 200px' }}>
+                  <div className="mb-3 flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-100 text-rose-600">
+                      <IconMapPin size={18} />
+                    </div>
+                    <h2 className="text-lg font-bold text-zinc-900">{dg.distrito}</h2>
+                    <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-500">
+                      {dg.tipos.reduce((s, t) => s + t.clientes.length, 0)}
+                    </span>
+                  </div>
+                  <div className="flex flex-col gap-4">
+                    {dg.tipos.map((tg) => {
+                      const TipoIcon = tipoClienteIcons[tg.tipo] || IconBuildingStore;
+                      return (
+                        <div key={tg.tipo}>
+                          <div className="mb-2 flex items-center gap-1.5 px-1">
+                            <TipoIcon size={15} className="text-zinc-400" />
+                            <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-400">
+                              {tg.tipo}
+                            </h3>
+                            <span className="text-xs text-zinc-300">({tg.clientes.length})</span>
+                          </div>
+                          <div className="flex flex-col gap-2 md:grid md:grid-cols-2 lg:grid-cols-3">
+                            {tg.clientes.map((cliente) => (
+                              <ClienteCard
+                                key={cliente.id}
+                                cliente={cliente}
+                                onRegistrarVisita={() => handleRegistrarVisita(cliente)}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
 
-        <Suspense fallback={null}>
-          <VisitaSheet
-            open={sheetOpen}
-            onOpenChange={handleVisitaSheetChange}
-            cliente={clienteSheet}
-            onSuccess={handleVisitaSuccess}
-            onEditarCliente={handleEditarFromVisita}
-          />
-        </Suspense>
+        <VisitaSheet
+          open={sheetOpen}
+          onOpenChange={handleVisitaSheetChange}
+          cliente={clienteSheet}
+          onSuccess={handleVisitaSuccess}
+          onEditarCliente={handleEditarFromVisita}
+        />
 
-        <Suspense fallback={null}>
-          <CrearClienteSheet
-            key={clienteEditar?.id ?? "new"}
-            open={crearSheetOpen}
-            onOpenChange={handleCrearSheetChange}
-            onSuccess={handleCrearClienteSuccess}
-            cliente={clienteEditar}
-          />
-        </Suspense>
+        <CrearClienteSheet
+          key={clienteEditar?.id ?? "new"}
+          open={crearSheetOpen}
+          onOpenChange={handleCrearSheetChange}
+          onSuccess={handleCrearClienteSuccess}
+          cliente={clienteEditar}
+        />
       </div>
     );
   }
@@ -251,8 +252,8 @@ export default function VentaPage() {
         </div>
       </div>
 
-      <div className="mt-4 flex flex-col gap-3 md:grid md:grid-cols-3 md:gap-4">
-        {["Chiclayo", "Trujillo", "Chimbote"].map((ciudad) => (
+      <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4 md:gap-4">
+        {ciudades.map((ciudad) => (
           <CiudadCard
             key={ciudad}
             nombre={ciudad}
@@ -270,15 +271,13 @@ export default function VentaPage() {
         <IconPlus size={28} />
       </button>
 
-      <Suspense fallback={null}>
-        <CrearClienteSheet
-          key={clienteEditar?.id ?? "new"}
-          open={crearSheetOpen}
-          onOpenChange={handleCrearSheetChange}
-          onSuccess={handleCrearClienteSuccess}
-          cliente={clienteEditar}
-        />
-      </Suspense>
+      <CrearClienteSheet
+        key={clienteEditar?.id ?? "new"}
+        open={crearSheetOpen}
+        onOpenChange={handleCrearSheetChange}
+        onSuccess={handleCrearClienteSuccess}
+        cliente={clienteEditar}
+      />
     </div>
   );
 }

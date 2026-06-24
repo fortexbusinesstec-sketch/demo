@@ -160,14 +160,14 @@ export function CrearClienteSheet({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-lg max-h-[90dvh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-lg max-h-[90dvh] !gap-0 !p-0 min-h-0">
+        <DialogHeader className="shrink-0 px-4 pt-4">
           <div className="flex items-center gap-2">
             {isEdit && <IconPencil size={18} className="text-zinc-500" />}
             <DialogTitle>{isEdit ? "Editar Cliente" : "Nuevo Cliente Potencial"}</DialogTitle>
           </div>
         </DialogHeader>
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 overflow-y-auto min-h-0 px-4 pb-4">
           <div>
             <p className="mb-1.5 text-xs font-semibold text-zinc-600 uppercase tracking-wide">Ciudad *</p>
             <div className="grid grid-cols-3 gap-2">

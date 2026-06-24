@@ -13,7 +13,6 @@ import {
   IconPhone,
   IconMail,
   IconUser,
-  IconMap,
 } from "@tabler/icons-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -60,12 +59,6 @@ export const ClienteCard = memo(function ClienteCard({
   const badgeColor = estadoColor[cliente.estado] || "";
   const cardBg = estadoBg[cliente.estado] || "";
 
-  const mapsUrl = cliente.lat && cliente.lng
-    ? `https://www.google.com/maps/dir/?api=1&destination=${cliente.lat},${cliente.lng}`
-    : cliente.direccion
-      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([cliente.direccion, cliente.distrito, cliente.ciudad].filter(Boolean).join(", "))}`
-      : null;
-
   return (
     <>
       <Card
@@ -94,15 +87,17 @@ export const ClienteCard = memo(function ClienteCard({
       </Card>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogTitle className="flex items-center gap-2 text-lg font-bold text-zinc-900">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-100 text-sky-600">
-              <Icon size={18} />
-            </div>
-            {cliente.nombre_entidad}
-          </DialogTitle>
+        <DialogContent className="sm:max-w-md max-h-[85dvh] !gap-0 !p-0 min-h-0">
+          <div className="shrink-0 px-4 pt-4">
+            <DialogTitle className="flex items-center gap-2 text-lg font-bold text-zinc-900">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-100 text-sky-600">
+                <Icon size={18} />
+              </div>
+              {cliente.nombre_entidad}
+            </DialogTitle>
+          </div>
 
-          <div className="space-y-3">
+          <div className="overflow-y-auto min-h-0 space-y-3 px-4 pb-4">
             {cliente.direccion && (
               <div className="flex items-start gap-2">
                 <IconMapPin size={18} className="mt-0.5 shrink-0 text-zinc-400" />
@@ -153,18 +148,6 @@ export const ClienteCard = memo(function ClienteCard({
               <p className="text-xs italic text-zinc-400">Ref: {cliente.referencia}</p>
             )}
           </div>
-
-          {mapsUrl && (
-            <a
-              href={mapsUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl bg-sky-500 py-3 text-sm font-semibold text-white transition-colors hover:bg-sky-600"
-            >
-              <IconMap size={18} />
-              Abrir en Google Maps
-            </a>
-          )}
         </DialogContent>
       </Dialog>
     </>

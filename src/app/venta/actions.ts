@@ -60,6 +60,13 @@ export async function getConteoPorVisitar(ciudad: string) {
   return Number(row.count);
 }
 
+export const getCiudades = cache(async () => {
+  const result = await db.execute(
+    "SELECT DISTINCT ciudad FROM clientes_potenciales ORDER BY ciudad"
+  );
+  return serialize<string[]>(result.rows.map((r: any) => r.ciudad));
+});
+
 export const getAllConteos = cache(async () => {
   const result = await db.execute(
     "SELECT ciudad, COUNT(*) as por_visitar FROM clientes_potenciales WHERE estado = 'Por visitar' GROUP BY ciudad"
@@ -82,22 +89,16 @@ export async function crearVisita(data: {
   cliente_id: number;
   resultado: string;
   notas: string | null;
-  foto_url_1: string | null;
-  foto_url_2: string | null;
-  foto_url_3: string | null;
   lat: number | null;
   lng: number | null;
 }) {
   const result = await db.execute({
-    sql: `INSERT INTO visitas (cliente_id, resultado, notas, foto_url_1, foto_url_2, foto_url_3, lat, lng)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    sql: `INSERT INTO visitas (cliente_id, resultado, notas, lat, lng)
+          VALUES (?, ?, ?, ?, ?)`,
     args: [
       data.cliente_id,
       data.resultado,
       data.notas,
-      data.foto_url_1,
-      data.foto_url_2,
-      data.foto_url_3,
       data.lat,
       data.lng,
     ],

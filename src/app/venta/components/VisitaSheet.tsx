@@ -27,7 +27,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { FotoSlot } from "./FotoSlot";
 import { useGeolocation } from "../hooks/useGeolocation";
 import { crearVisita, type ClienteRow } from "../actions";
 import { cn } from "@/lib/utils";
@@ -57,9 +56,6 @@ export function VisitaSheet({
 }) {
   const [resultado, setResultado] = useState<ResultadoKey | null>(null);
   const [notas, setNotas] = useState("");
-  const [foto1, setFoto1] = useState<string | null>(null);
-  const [foto2, setFoto2] = useState<string | null>(null);
-  const [foto3, setFoto3] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const geo = useGeolocation();
@@ -67,9 +63,6 @@ export function VisitaSheet({
   const resetForm = () => {
     setResultado(null);
     setNotas("");
-    setFoto1(null);
-    setFoto2(null);
-    setFoto3(null);
     geo.resetLocation();
     setSaving(false);
     setSaved(false);
@@ -83,9 +76,6 @@ export function VisitaSheet({
         cliente_id: cliente.id,
         resultado,
         notas: notas || null,
-        foto_url_1: foto1,
-        foto_url_2: foto2,
-        foto_url_3: foto3,
         lat: geo.lat,
         lng: geo.lng,
       });
@@ -126,14 +116,14 @@ export function VisitaSheet({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-lg max-h-[85dvh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-lg max-h-[85dvh] !gap-0 !p-0 min-h-0">
+        <DialogHeader className="shrink-0 px-4 pt-4">
           <div>
             <DialogTitle>Registrar Visita</DialogTitle>
             {cliente && <DialogDescription className="break-words">{cliente.nombre_entidad}</DialogDescription>}
           </div>
         </DialogHeader>
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 overflow-y-auto min-h-0 px-4 pb-4">
           {cliente && (
             <div className="rounded-xl bg-sky-50 border border-sky-100 p-3">
               <div className="flex items-start justify-between gap-2 mb-2 pb-2 border-b border-sky-100">
@@ -259,15 +249,9 @@ export function VisitaSheet({
             />
           </div>
 
-          <div>
-            <p className="mb-2 text-xs font-semibold text-zinc-600 uppercase tracking-wide">Fotos</p>
-            <div className="grid grid-cols-3 gap-2">
-              <FotoSlot value={foto1} onChange={setFoto1} />
-              <FotoSlot value={foto2} onChange={setFoto2} />
-              <FotoSlot value={foto3} onChange={setFoto3} />
-            </div>
-          </div>
+        </div>
 
+        <div className="shrink-0 border-t border-zinc-200 px-4 pb-4 pt-3">
           <Button
             type="button"
             variant="default"
