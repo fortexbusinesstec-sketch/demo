@@ -116,7 +116,7 @@ export function VisitaSheet({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-lg max-h-[85dvh] !gap-0 !p-0 min-h-0">
+      <DialogContent className="sm:max-w-lg max-h-[85dvh] !gap-0 !p-0 min-h-0 grid-rows-[auto_minmax(0,1fr)_auto]">
         <DialogHeader className="shrink-0 px-4 pt-4">
           <div>
             <DialogTitle>Registrar Visita</DialogTitle>
