@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Henrry · Azur Constructora</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <style>
+    :root {
+      --red: #c12128;
+      --red-hover: #a01b21;
+      --gold: #ffd266;
+      --green: #38A169;
+      --dark: #292134;
+      --gray-soft: #F7FAFC;
+      --card-radius: 16px;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: var(--gray-soft);
+      min-height: 100vh;
+    }
+
+    .navbar-crm {
+      background: var(--red);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .navbar-crm .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #fff;
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      text-decoration: none;
+    }
+    .navbar-crm .brand svg { width: 22px; height: 22px; stroke-width: 1.8; }
+    .navbar-crm .user-area {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: rgba(255,255,255,0.85);
+      font-size: 14px;
+    }
+    .navbar-crm .user-area .user-name { font-weight: 500; }
+    .navbar-crm .user-area .user-role {
+      font-size: 12px;
+      opacity: 0.6;
+      display: block;
+    }
+    .btn-logout {
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: #fff;
+      padding: 6px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-logout:hover { background: rgba(255,255,255,0.2); }
+
+    .tab-bar {
+      display: flex;
+      background: #fff;
+      border-bottom: 1px solid #E2E8F0;
+      position: sticky;
+      top: 56px;
+      z-index: 90;
+    }
+    .tab-bar button {
+      flex: 1;
+      padding: 14px 12px;
+      border: none;
+      background: transparent;
+      font-size: 14px;
+      font-weight: 500;
+      color: #718096;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .tab-bar button.active {
+      color: var(--red);
+      border-bottom-color: var(--red);
+      font-weight: 600;
+    }
+    .tab-bar button svg { width: 18px; height: 18px; }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .page-header {
+      padding: 24px 16px 8px;
+      text-align: center;
+    }
+    .page-header h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--red);
+      margin-bottom: 4px;
+    }
+    .page-header p {
+      font-size: 15px;
+      color: #718096;
+      margin: 0;
+    }
+
+    .counter-card {
+      margin: 16px;
+      background: linear-gradient(135deg, var(--red), #d42f36);
+      border-radius: var(--card-radius);
+      padding: 20px 24px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .counter-card .count-num { font-size: 36px; font-weight: 800; line-height: 1; letter-spacing: -0.02em; }
+    .counter-card .count-label { font-size: 14px; opacity: 0.85; }
+    .counter-card .count-icon {
+      width: 48px; height: 48px; background: rgba(255,255,255,0.12);
+      border-radius: 14px; display: flex; align-items: center; justify-content: center;
+    }
+    .counter-card .count-icon svg { width: 26px; height: 26px; }
+
+    .kanban-container { padding: 8px 16px 24px; display: flex; flex-direction: column; gap: 16px; }
+    .kanban-card {
+      background: #fff; border-radius: var(--card-radius); border: 1px solid #E2E8F0; padding: 20px;
+    }
+    .kanban-card:active { box-shadow: 0 0 0 2px var(--red); }
+    .kanban-card .kc-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+    .kanban-card .kc-name { font-size: 18px; font-weight: 700; color: var(--red); }
+    .kanban-card .kc-phone { font-family: ui-monospace, monospace; font-size: 15px; color: #4A5568; margin-top: 2px; }
+    .kanban-card .kc-details { font-size: 14px; color: #718096; line-height: 1.5; margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px solid #EDF2F7; }
+    .kanban-card .kc-preference {
+      background: #FFFFF0; border: 1.5px solid #F6E05E; border-radius: 12px;
+      padding: 14px 16px; margin-bottom: 16px;
+    }
+    .kanban-card .kc-preference-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: #975A16; font-weight: 600; margin-bottom: 4px; }
+    .kanban-card .kc-preference-text { font-size: 15px; font-weight: 600; color: #744210; }
+    .kanban-card .kc-meta { display: flex; gap: 16px; margin-bottom: 14px; font-size: 13px; color: #A0AEC0; }
+    .kanban-card .kc-meta span { display: flex; align-items: center; gap: 4px; }
+    .btn-cita-creada {
+      width: 100%; padding: 16px; border-radius: 14px; border: none;
+      background: var(--green); color: #fff; font-size: 16px; font-weight: 600;
+      cursor: pointer; transition: background 0.15s, transform 0.1s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-cita-creada:hover { background: #2F855A; }
+    .btn-cita-creada:active { transform: scale(0.98); }
+
+    /* ─── Reporte de Seguimiento ─── */
+    .report-section { padding: 16px; }
+    .report-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .report-header h2 {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--red);
+      margin: 0;
+    }
+    .report-header svg { width: 24px; height: 24px; color: var(--red); }
+    .report-day {
+      background: #fff;
+      border: 1px solid #E2E8F0;
+      border-radius: var(--card-radius);
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+    .report-day-header {
+      background: var(--red);
+      color: #fff;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .report-day-header .day-date {
+      font-weight: 600;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .report-day-header .day-count {
+      font-size: 12px;
+      opacity: 0.8;
+    }
+    .report-day-header svg { width: 16px; height: 16px; }
+    .report-day-body { padding: 12px 16px; }
+    .report-entry {
+      display: flex;
+      gap: 12px;
+      padding: 8px 0;
+      border-bottom: 1px solid #F7FAFC;
+    }
+    .report-entry:last-child { border-bottom: none; }
+    .report-entry .entry-time {
+      font-size: 12px;
+      color: #A0AEC0;
+      font-family: ui-monospace, monospace;
+      white-space: nowrap;
+      min-width: 48px;
+      padding-top: 1px;
+    }
+    .report-entry .entry-body { flex: 1; }
+    .report-entry .entry-lead {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--red);
+    }
+    .report-entry .entry-text {
+      font-size: 14px;
+      color: #4A5568;
+      line-height: 1.4;
+    }
+    .report-empty {
+      text-align: center;
+      padding: 40px 24px;
+      color: #A0AEC0;
+    }
+    .report-empty svg {
+      width: 48px; height: 48px; opacity: 0.4; margin-bottom: 12px;
+    }
+    .report-empty h3 {
+      font-size: 16px; font-weight: 600; color: #718096; margin-bottom: 4px;
+    }
+    .report-empty p { font-size: 14px; margin: 0; }
+
+    .empty-state {
+      text-align: center; padding: 60px 24px; color: #A0AEC0;
+    }
+    .empty-state svg { width: 56px; height: 56px; margin-bottom: 16px; opacity: 0.4; }
+    .empty-state h3 { font-size: 18px; font-weight: 600; color: #718096; margin-bottom: 6px; }
+    .empty-state p { font-size: 14px; margin: 0; }
+
+    @media (min-width: 768px) {
+      .kanban-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 20px; padding: 16px 24px 32px; }
+      .page-header { padding: 32px 24px 12px; }
+      .page-header h1 { font-size: 28px; }
+      .counter-card { margin: 16px 24px; }
+      .report-section { padding: 16px 24px; }
+    }
+    .d-none { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar-crm" data-od-id="navbar">
+    <a href="index.html" class="brand">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Azur Constructora
+    </a>
+    <div class="user-area">
+      <div>
+        <span class="user-name">Henrry</span>
+        <span class="user-role">Jefe · Proyectos</span>
+      </div>
+      <button class="btn-logout" onclick="cerrarSesion()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Salir
+      </button>
+    </div>
+  </nav>
+
+  <div class="tab-bar" data-od-id="tab-bar">
+    <button class="active" data-tab="kanban" onclick="cambiarTab('kanban')">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+      Leads pendientes
+    </button>
+    <button data-tab="reporte" onclick="cambiarTab('reporte')">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      Reporte de Seguimiento
+    </button>
+  </div>
+
+  <!-- ════════════════ TAB: KANBAN ════════════════ -->
+  <div class="tab-content active" id="tab-kanban">
+
+    <div class="page-header" data-od-id="header">
+      <h1>Leads listos para coordinar</h1>
+      <p>Revisa las solicitudes de cita virtual y coordina con el área de proyectos</p>
+    </div>
+
+    <div class="counter-card" data-od-id="counter">
+      <div>
+        <div class="count-num" id="lead-count">0</div>
+        <div class="count-label" id="lead-count-label">leads pendientes por coordinar</div>
+      </div>
+      <div class="count-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      </div>
+    </div>
+
+    <div class="kanban-container" id="kanban-container" data-od-id="kanban"></div>
+
+    <div class="empty-state d-none" id="empty-state">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      <h3>No hay leads pendientes</h3>
+      <p>Todos los leads con solicitud de cita virtual han sido coordinados.</p>
+    </div>
+
+  </div>
+
+  <!-- ════════════════ TAB: REPORTE DE SEGUIMIENTO ════════════════ -->
+  <div class="tab-content" id="tab-reporte">
+
+    <div class="page-header" data-od-id="report-header">
+      <h1>Reporte de Seguimiento</h1>
+      <p>Actividad diaria registrada por el equipo</p>
+    </div>
+
+    <div class="report-section" id="reporte-container" data-od-id="reporte">
+      <div class="report-empty">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        <h3>Cargando reporte...</h3>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const API = {
+      _delay(ms = 200) { return new Promise(r => setTimeout(r, ms)); },
+      _getLeads() { return JSON.parse(localStorage.getItem('leads') || '[]'); },
+      _saveLeads(leads) { localStorage.setItem('leads', JSON.stringify(leads)); },
+
+      async getLeadsPendientes() {
+        await this._delay();
+        return this._getLeads().filter(l => l.estado === 'pendiente_cita_virtual');
+      },
+
+      async getTodosLeads() {
+        await this._delay(100);
+        return this._getLeads();
+      },
+
+      async updateLead(id, updates) {
+        await this._delay(250);
+        const leads = this._getLeads();
+        const idx = leads.findIndex(l => l.id === Number(id));
+        if (idx === -1) throw new Error('Lead no encontrado');
+        leads[idx] = { ...leads[idx], ...updates };
+        this._saveLeads(leads);
+        return leads[idx];
+      }
+    };
+
+    let tabActual = 'kanban';
+
+    function esc(s) {
+      const d = document.createElement('div');
+      d.textContent = s || '';
+      return d.innerHTML;
+    }
+
+    /* ─── Tabs ─── */
+    function cambiarTab(tab) {
+      tabActual = tab;
+      document.querySelectorAll('.tab-bar button').forEach(b => b.classList.remove('active'));
+      document.querySelector(`.tab-bar button[data-tab="${tab}"]`).classList.add('active');
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      document.getElementById(`tab-${tab}`).classList.add('active');
+
+      if (tab === 'kanban') renderKanban();
+      if (tab === 'reporte') renderReporte();
+    }
+
+    /* ─── Kanban ─── */
+    async function renderKanban() {
+      const leads = await API.getLeadsPendientes();
+      const container = document.getElementById('kanban-container');
+      const empty = document.getElementById('empty-state');
+      const countEl = document.getElementById('lead-count');
+
+      countEl.textContent = leads.length;
+      document.getElementById('lead-count-label').textContent =
+        leads.length === 1 ? 'lead pendiente por coordinar' : 'leads pendientes por coordinar';
+
+      if (leads.length === 0) {
+        container.innerHTML = '';
+        empty.classList.remove('d-none');
+        return;
+      }
+      empty.classList.add('d-none');
+
+      container.innerHTML = leads.map(l => `
+        <div class="kanban-card" data-od-id="kanban-card-${l.id}">
+          <div class="kc-header">
+            <div>
+              <div class="kc-name">${esc(l.nombre)}</div>
+              <div class="kc-phone">${esc(l.telefono)}</div>
+            </div>
+            <span class="badge" style="background:var(--red);color:#fff;font-size:11px;padding:4px 10px;border-radius:999px;">
+              Pendiente
+            </span>
+          </div>
+          <div class="kc-details">${esc(l.detalles)}</div>
+          <div class="kc-preference">
+            <div class="kc-preference-label">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              Preferencia de reuni\u00f3n
+            </div>
+            <div class="kc-preference-text">${esc(l.preferencia_reunion || 'No especificada')}</div>
+          </div>
+          <div class="kc-meta">
+            <span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              Ingreso: ${l.fecha_ingreso}
+            </span>
+            ${l.proxima_gestion ? `<span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Pr\u00f3xima: ${l.proxima_gestion}
+            </span>` : ''}
+          </div>
+          <button class="btn-cita-creada" onclick="confirmarCitaCreada(${l.id})">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            Cita creada con Proyectos
+          </button>
+        </div>
+      `).join('');
+    }
+
+    async function confirmarCitaCreada(id) {
+      if (!confirm('\u00bfConfirmar que la cita fue creada con el \u00e1rea de Proyectos?')) return;
+      await API.updateLead(id, { estado: 'cita_creada' });
+      await renderKanban();
+    }
+
+    /* ─── Reporte de Seguimiento ─── */
+    async function renderReporte() {
+      const container = document.getElementById('reporte-container');
+      const leads = await API.getTodosLeads();
+
+      const seguimientosPorDia = {};
+
+      leads.forEach(lead => {
+        if (lead.seguimientos && lead.seguimientos.length > 0) {
+          lead.seguimientos.forEach(s => {
+            const dia = s.fecha.slice(0, 10);
+            if (!seguimientosPorDia[dia]) seguimientosPorDia[dia] = [];
+            seguimientosPorDia[dia].push({
+              lead: lead.nombre,
+              hora: s.fecha.length > 10 ? s.fecha.slice(11) : '',
+              texto: s.nota
+            });
+          });
+        }
+        if (lead.fecha_ingreso) {
+          const dia = lead.fecha_ingreso;
+          if (!seguimientosPorDia[dia]) seguimientosPorDia[dia] = [];
+          seguimientosPorDia[dia].push({
+            lead: lead.nombre,
+            hora: '',
+            texto: `\uD83D\uDCE5 Lead registrado - ${lead.estado === 'nuevo' ? 'Nuevo' : lead.estado}`
+          });
+        }
+      });
+
+      const dias = Object.keys(seguimientosPorDia).sort().reverse();
+
+      if (dias.length === 0) {
+        container.innerHTML = `
+          <div class="report-empty">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            <h3>A\u00fan no hay actividad registrada</h3>
+            <p>Los seguimientos aparecer\u00e1n aqu\u00ed a medida que Fabrizio gestione los leads.</p>
+          </div>`;
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="report-header">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          <h2>Resumen diario</h2>
+        </div>
+        ${dias.map(dia => {
+          const entradas = seguimientosPorDia[dia];
+          const fecha = new Date(dia + 'T12:00:00');
+          const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+          const fechaStr = fecha.toLocaleDateString('es-ES', opciones);
+          return `
+            <div class="report-day">
+              <div class="report-day-header">
+                <span class="day-date">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  ${fechaStr}
+                </span>
+                <span class="day-count">${entradas.length} ${entradas.length === 1 ? 'actividad' : 'actividades'}</span>
+              </div>
+              <div class="report-day-body">
+                ${entradas.map(e => `
+                  <div class="report-entry">
+                    <div class="entry-time">${e.hora || '\u2014'}</div>
+                    <div class="entry-body">
+                      <div class="entry-lead">${esc(e.lead)}</div>
+                      <div class="entry-text">${esc(e.texto)}</div>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `;
+        }).join('')}
+      `;
+    }
+
+    function cerrarSesion() {
+      window.location.href = 'index.html';
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderKanban();
+    });
+  </script>
+</body>
+</html>

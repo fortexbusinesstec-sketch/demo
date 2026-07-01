@@ -58,6 +58,7 @@ export function VisitaSheet({
   const [notas, setNotas] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const geo = useGeolocation();
 
   const resetForm = () => {
@@ -66,6 +67,7 @@ export function VisitaSheet({
     geo.resetLocation();
     setSaving(false);
     setSaved(false);
+    setError(null);
   };
 
   const handleSave = async () => {
@@ -85,7 +87,8 @@ export function VisitaSheet({
         onOpenChange(false);
         onSuccess();
       }, 1200);
-    } catch {
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Error al guardar la visita");
       setSaving(false);
     }
   };
@@ -251,6 +254,11 @@ export function VisitaSheet({
 
         </div>
 
+        {error && (
+          <div className="shrink-0 px-4 pb-2">
+            <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>
+          </div>
+        )}
         <div className="shrink-0 border-t border-zinc-200 px-4 pb-4 pt-3">
           <Button
             type="button"
