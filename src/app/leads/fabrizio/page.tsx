@@ -382,7 +382,7 @@ export default function FabrizioPage() {
       <button
         onClick={() => setNuevoOpen(true)}
         className="fixed bottom-5 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full border-0 text-white shadow-lg transition-transform active:scale-90 hover:shadow-xl md:bottom-6 md:right-6 md:h-15 md:w-15"
-        style={{ background: "#38A169" }}
+        style={{ background: "#c12128" }}
         aria-label="Nuevo Lead"
       >
         <IconPlus size={24} stroke={2.5} className="md:size-[28px]" />
